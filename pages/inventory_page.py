@@ -1,6 +1,6 @@
 from playwright.sync_api import Page, expect
 
-class inventoryPage:
+class InventoryPage:
 
     def __init__(self, page : Page):
         self.page = page
@@ -27,10 +27,6 @@ class inventoryPage:
     def open_cart(self):
         self.cart_icon.click()
 
-
-
-
-
-    
-        
-
+    def validate_cart_quantity(self, quantity: int):
+        expect(self.cart_icon).to_have_text(str(quantity))
+        # self.page.pause() 
