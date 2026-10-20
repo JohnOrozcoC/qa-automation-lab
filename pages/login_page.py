@@ -1,5 +1,5 @@
 from playwright.sync_api import Page
-
+from config.environment import BASE_URL
 class LoginPage:
 
     def __init__(self, page: Page):
@@ -9,7 +9,8 @@ class LoginPage:
         self.login_button = page.get_by_role("button", name ="login")
 
     def open(self):
-        self.page.goto("https://www.saucedemo.com/")
+        #self.page.goto("https://www.saucedemo.com/")
+        self.page.goto(BASE_URL)
         
     
     def login(self, username: str, password: str):
