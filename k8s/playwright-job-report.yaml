@@ -1,0 +1,26 @@
+apiVersion: batch/v1
+kind: Job
+
+metadata:
+  name: playwright-smoke-report
+
+spec:
+  backoffLimit: 0
+
+  template:
+    spec:
+      restartPolicy: Never
+
+      containers:
+        - name: playwright
+          image: acrqaautomationjohn2026.azurecr.io/playwright-lab:1.0
+          command: ["sh", "-c"]
+          args:
+            - |
+              mkdir -p reports
+              pytest -m smoke \
+                --html=reports/smoke-report.html \
+                --self-contained-html
+              TEST_EXIT=$?
+              sleep 600
+              exit $TEST_EXIT

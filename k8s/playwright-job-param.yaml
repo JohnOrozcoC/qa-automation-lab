@@ -1,0 +1,24 @@
+apiVersion: batch/v1
+kind: Job
+
+metadata:
+  name: playwright-smoke-param
+
+spec:
+  backoffLimit: 0
+
+  template:
+    spec:
+      restartPolicy: Never
+
+      containers:
+        - name: playwright
+          image: acrqaautomationjohn2026.azurecr.io/playwright-lab:1.0
+
+          env:
+            - name: TEST_MARKER
+              value: "smoke"
+
+          command: ["sh", "-c"]
+          args:
+            - pytest -m "$TEST_MARKER"
