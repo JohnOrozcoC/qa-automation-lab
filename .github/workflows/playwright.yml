@@ -37,3 +37,66 @@ jobs:
         with:
           name: smoke-test-report
           path: reports/
+          
+  deploy:
+    needs: test
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+
+    runs-on: ubuntu-latest
+
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Login to Azure with OIDC
+        uses: azure/login@v3
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Login to ACR
+        run: az acr login --name acrqaautomationjohn2026
+
+      - name: Build Docker image
+        run: |
+          docker build \
+            -t acrqaautomationjohn2026.azurecr.io/playwright-lab:${{ github.sha }} .
+
+      - name: Push Docker image
+        run: |
+          docker push \
+            acrqaautomationjohn2026.azurecr.io/playwright-lab:${{ github.sha }}
+
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v5
+
+      - name: Get AKS credentials
+        run: |
+          az aks get-credentials \
+            --resource-group rg-qa-automation-lab \
+            --name aks-qa-automation-lab \
+            --overwrite-existing
+
+      - name: Run Playwright smoke tests in AKS
+        run: |
+          kubectl delete job playwright-smoke-ci -n qa --ignore-not-found
+
+          kubectl create job playwright-smoke-ci \
+            --image=acrqaautomationjohn2026.azurecr.io/playwright-lab:${{ github.sha }} \
+            -n qa \
+            -- sh -c "pytest -m smoke"
+
+          kubectl wait \
+            --for=condition=complete \
+            job/playwright-smoke-ci \
+            -n qa \
+            --timeout=180s
+
+      - name: Show Playwright logs
+        if: always()
+        run: kubectl logs job/playwright-smoke-ci -n qa

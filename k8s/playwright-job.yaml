@@ -1,0 +1,32 @@
+apiVersion: batch/v1
+kind: Job
+
+metadata:
+  name: playwright-smoke
+
+spec:
+  backoffLimit: 0
+
+  template:
+    spec:
+      restartPolicy: Never
+
+      containers:
+        - name: playwright
+          image: acrqaautomationjohn2026.azurecr.io/playwright-lab:1.0
+  
+          envFrom:
+            - configMapRef:
+                name: qa-config
+
+            - secretRef:
+                name: qa-secrets
+
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "512Mi"
+
+            limits:
+              cpu: "1"
+              memory: "1Gi"      
